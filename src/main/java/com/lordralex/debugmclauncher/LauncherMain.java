@@ -10,6 +10,7 @@ import com.lordralex.debugmclauncher.panels.LoginPanel;
 import com.lordralex.debugmclauncher.panels.SystemInformationPanel;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -73,11 +74,11 @@ public class LauncherMain extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(Alignment.TRAILING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(iconPanel1, GroupLayout.DEFAULT_SIZE, 532, Short.MAX_VALUE)
+                .addComponent(iconPanel1, GroupLayout.DEFAULT_SIZE, 644, Short.MAX_VALUE)
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(loginPanel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
             .addGroup(layout.createSequentialGroup()
-                .addComponent(informationPanel1, GroupLayout.DEFAULT_SIZE, 578, Short.MAX_VALUE)
+                .addComponent(informationPanel1, GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(systemInformationPanel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
         );
@@ -102,9 +103,16 @@ public class LauncherMain extends javax.swing.JFrame {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+
+                Map<String, String> map = System.getenv();
+                for (String key : map.keySet()) {
+                    System.out.println(key + ": " + map.get(key));
+                }
+
                 LauncherMain main = new LauncherMain();
                 main.setVisible(true);
                 main.informationPanel1.getNewsFeed();
+                main.systemInformationPanel1.getSystemInfo();
                 main.update(main.getGraphics());
             }
         });
