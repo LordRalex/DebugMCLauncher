@@ -103,12 +103,6 @@ public class LauncherMain extends javax.swing.JFrame {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-
-                Map<String, String> map = System.getenv();
-                for (String key : map.keySet()) {
-                    System.out.println(key + ": " + map.get(key));
-                }
-
                 LauncherMain main = new LauncherMain();
                 main.setVisible(true);
                 main.informationPanel1.getNewsFeed();

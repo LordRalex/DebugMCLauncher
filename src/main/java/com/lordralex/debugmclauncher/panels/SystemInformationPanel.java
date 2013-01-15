@@ -9,8 +9,13 @@ import com.lordralex.debugmclauncher.utils.OS;
 import java.awt.Cursor;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
@@ -222,10 +227,25 @@ public class SystemInformationPanel extends JPanel {
             freeRamTextField.setText("Incomplete");
             totalRamTextField.setText("Incomplete");
 
-            mcVersionTextField.setText("1.4.7");
+            mcVersionTextField.setText("Incomplete");
 
             //load lwjgl jars here and check version
-            lwjglTextField.setText("2.8.5");
+            String version = "Unknown";
+            try {
+                String s = OS.getFolder() + "bin" + File.separator + "natives";
+                // This is a hack method to load the lwjgl
+                dynamicLoad(s);
+                URL[] urls = new URL[]{
+                    new File(OS.getFolderFile(), "bin" + File.separator + "lwjgl.jar").toURI().toURL()
+                };
+                ClassLoader loader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
+                Class<?> cl = Class.forName("org.lwjgl.Sys", true, loader);
+                version = (String) cl.asSubclass(org.lwjgl.Sys.class).getMethod("getVersion").invoke(null);
+            } catch (Throwable ex) {
+                Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            lwjglTextField.setText(version);
 
             //read minecraft.jar and look for meta-inf
             JarFile file;
@@ -241,6 +261,39 @@ public class SystemInformationPanel extends JPanel {
                 e.printStackTrace(System.out);
                 moddedTextField.setText("No jar found");
             }
+        }
+    }
+
+    // This enables the java.library.path to be modified at runtime
+    // From a Sun engineer at http://forums.sun.com/thread.jspa?threadID=707176
+    private void dynamicLoad(String s) throws IOException {
+        try {
+            Field field = ClassLoader.class
+                    .getDeclaredField("usr_paths");
+            field.setAccessible(
+                    true);
+            String[] paths = (String[]) field.get(null);
+            for (int i = 0;
+                    i < paths.length;
+                    i++) {
+                if (s.equals(paths[i])) {
+                    return;
+                }
+            }
+            String[] tmp = new String[paths.length + 1];
+
+            System.arraycopy(paths,
+                    0, tmp, 0, paths.length);
+            tmp[paths.length] = s;
+
+            field.set(
+                    null, tmp);
+            System.setProperty(
+                    "java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
+        } catch (IllegalAccessException e) {
+            throw new IOException("Failed to get permissions to set library path");
+        } catch (NoSuchFieldException e) {
+            throw new IOException("Failed to get field handle to set library path");
         }
     }
 }

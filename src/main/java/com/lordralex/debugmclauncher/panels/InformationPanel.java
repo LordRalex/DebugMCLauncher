@@ -72,7 +72,6 @@ public final class InformationPanel extends JPanel {
 
         @Override
         public void run() {
-            System.out.println("Getting feed");
             try {
                 jTextPane2.setPage(new URL("http://mcupdate.tumblr.com/"));
             } catch (Exception e) {
@@ -80,7 +79,6 @@ public final class InformationPanel extends JPanel {
                 jTextPane2.setText("Unable to get the news feed");
             }
             jTextPane2.update(jTextPane2.getGraphics());
-            System.out.println("Got feed");
         }
     }
 }

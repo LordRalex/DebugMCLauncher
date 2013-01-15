@@ -5,3 +5,7 @@
 *.war
 *.ear
 /target/
+/JavaApplication1/nbproject/private/
+/JavaProject1/nbproject/private/
+/JavaProject1/build/
+/JavaProject1/dist/
