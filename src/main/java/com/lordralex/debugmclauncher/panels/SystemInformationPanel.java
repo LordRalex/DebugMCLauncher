@@ -7,8 +7,10 @@ package com.lordralex.debugmclauncher.panels;
 import com.lordralex.debugmclauncher.textfields.UpdatingTextField;
 import com.lordralex.debugmclauncher.utils.OS;
 import java.awt.Cursor;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -223,9 +225,93 @@ public class SystemInformationPanel extends JPanel {
             //OS dependent RAM calls are here
             //linux: free -m
             //windows: systeminfo
-            //mac: sysctl hw.memsize | awk '{print $NF}' | tr '\n' 'Z' | sed 's/Z/ \/ 1024 \/ 1024/' | bc
-            freeRamTextField.setText("Incomplete");
-            totalRamTextField.setText("Incomplete");
+            //mac: total: sysctl hw.memsize | awk '{print $NF}' | tr '\n' 'Z' | sed 's/Z/ \/ 1024 \/ 1024/' | bc
+            //mac: free: top -l 1 | grep PhysMem: | awk '{print $10}' | sed 's/M//g'
+            String free = "Unknown";
+            String total = "Unknown";
+            freeRamTextField.setText("Determining");
+            totalRamTextField.setText("Determining");
+            switch (OS.getOS()) {
+                case WINDOWS:
+                    try {
+                        try {
+                            Process pr = Runtime.getRuntime().exec("systeminfo");
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                if (line.startsWith("Available Physical Memory")) {
+                                    free = line.split(":")[1].trim();
+                                } else if (line.startsWith("Total Physical Memory")) {
+                                    total = line.split(":")[1].trim();
+                                }
+                            }
+                            reader.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    break;
+                case LINUX:
+                    try {
+                        try {
+                            Process pr = Runtime.getRuntime().exec("free -m");
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                if (line.startsWith("-/+ buffers/cache:")) {
+                                    String temp = line.split(":")[1].trim();
+                                    String[] split = temp.split(" ");
+                                    free = split[0] + " MB";
+                                    total = split[split.length - 1] + " MB";
+                                }
+                            }
+                            reader.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    break;
+                case MAC:
+                    try {
+                        try {
+                            Process pr = Runtime.getRuntime().exec("top -l 1 | grep PhysMem: | awk '{print $10}' | sed 's/M//g'");
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                free = line + " MB";
+                            }
+                            reader.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    try {
+                        try {
+                            Process pr = Runtime.getRuntime().exec("sysctl hw.memsize | awk '{print $NF}' | tr '\\n' 'Z' | sed 's/Z/ \\/ 1024 \\/ 1024/' | bc");
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                total = line + " MB";
+                            }
+                            reader.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    break;
+                default:
+
+            }
+            freeRamTextField.setText(free);
+            totalRamTextField.setText(total);
 
             mcVersionTextField.setText("Incomplete");
 

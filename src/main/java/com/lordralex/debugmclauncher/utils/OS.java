@@ -57,6 +57,10 @@ public enum OS {
             System.out.println("OS: " + name);
             if (name.startsWith("win")) {
                 os = OS.WINDOWS;
+            } else if (name.startsWith("mac")) {
+                os = OS.MAC;
+            } else if (name.startsWith("linux")) {
+                os = OS.LINUX;
             }
         }
         return os;

@@ -46,7 +46,7 @@ public class LauncherMain extends javax.swing.JFrame {
         informationPanel1 = new InformationPanel();
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setBackground(new Color(0, 0, 0));
+        setBackground(new Color(255, 255, 255));
 
         loginPanel1.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 
