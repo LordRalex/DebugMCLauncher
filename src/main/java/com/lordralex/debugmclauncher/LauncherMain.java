@@ -8,12 +8,19 @@ import com.lordralex.debugmclauncher.panels.IconPanel;
 import com.lordralex.debugmclauncher.panels.InformationPanel;
 import com.lordralex.debugmclauncher.panels.LoginPanel;
 import com.lordralex.debugmclauncher.panels.SystemInformationPanel;
+import com.lordralex.debugmclauncher.utils.OS;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.JFrame;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
@@ -22,7 +29,9 @@ import javax.swing.border.BevelBorder;
  *
  * @author Joshua
  */
-public class LauncherMain extends javax.swing.JFrame {
+public class LauncherMain extends JFrame {
+
+    private static LauncherMain instance;
 
     /**
      * Creates new form LauncherMain
@@ -101,13 +110,21 @@ public class LauncherMain extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        try {
+            Logger.getLogger("com.lordralex.debugmclauncher").addHandler(new java.util.logging.FileHandler("logs.txt", true));
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SecurityException ex) {
+            Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                LauncherMain main = new LauncherMain();
-                main.setVisible(true);
-                main.informationPanel1.getNewsFeed();
-                main.systemInformationPanel1.getSystemInfo();
-                main.update(main.getGraphics());
+                instance = new LauncherMain();
+                instance.setVisible(true);
+                instance.informationPanel1.getNewsFeed();
+                instance.systemInformationPanel1.getSystemInfo();
+                instance.update(instance.getGraphics());
             }
         });
     }
@@ -117,4 +134,52 @@ public class LauncherMain extends javax.swing.JFrame {
     private LoginPanel loginPanel1;
     private SystemInformationPanel systemInformationPanel1;
     // End of variables declaration//GEN-END:variables
+
+    public static LauncherMain getInstance() {
+        return instance;
+    }
+
+    public IconPanel getIconPanel() {
+        return iconPanel1;
+    }
+
+    public LoginPanel getLoginPanel() {
+        return loginPanel1;
+    }
+
+    public void launchMinecraft(String[] args) {
+        this.setVisible(false);
+
+        ArrayList<String> command = new ArrayList<String>();
+        command.add("java");
+        command.add("-Xmx512M");
+        command.add("-Xms128M");
+        command.add("-cp");
+        command.add("\"%BIN%\\minecraft.jar" + File.pathSeparatorChar
+                + "%BIN%\\lwjgl.jar" + File.pathSeparatorChar
+                + "%BIN%\\lwjgl_util.jar" + File.pathSeparatorChar
+                + "%BIN%\\jinput.jar\"");
+        command.add("-Djava.library.path=\"%BIN%\\natives\"");
+        command.add("net.minecraft.client.Minecraft");
+        command.add(args[0]);
+        command.add(args[3]);
+
+        File bin = new File(OS.getFolderFile(), "bin");
+
+        for (int i = 0; i < command.size(); i++) {
+            command.set(i, command.get(i).replace("%BIN%", bin.getPath()));
+        }
+
+        ProcessBuilder builder = new ProcessBuilder().command(command).inheritIO();
+        try {
+            Process process = builder.start();
+            process.waitFor();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        System.exit(0);
+    }
 }

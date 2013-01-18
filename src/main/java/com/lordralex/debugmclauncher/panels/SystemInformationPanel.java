@@ -231,151 +231,186 @@ public class SystemInformationPanel extends JPanel {
             String total = "Unknown";
             freeRamTextField.setText("Determining");
             totalRamTextField.setText("Determining");
-            switch (OS.getOS()) {
-                case WINDOWS:
-                    try {
-                        try {
-                            Process pr = Runtime.getRuntime().exec("systeminfo");
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                if (line.startsWith("Available Physical Memory")) {
-                                    free = line.split(":")[1].trim();
-                                } else if (line.startsWith("Total Physical Memory")) {
-                                    total = line.split(":")[1].trim();
+            new Thread() {
+                @Override
+                public void run() {
+                    String free = "Unknown";
+                    String total = "Unknown";
+                    switch (OS.getOS()) {
+                        case WINDOWS:
+                            try {
+                                try {
+                                    Process pr = Runtime.getRuntime().exec("systeminfo");
+                                    BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        if (line.startsWith("Available Physical Memory")) {
+                                            free = line.split(":")[1].trim();
+                                        } else if (line.startsWith("Total Physical Memory")) {
+                                            total = line.split(":")[1].trim();
+                                        }
+                                    }
+                                    reader.close();
+                                } catch (IOException ex) {
+                                    Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
                                 }
+                            } catch (Exception ex) {
+                                Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                            reader.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    break;
-                case LINUX:
-                    try {
-                        try {
-                            Process pr = Runtime.getRuntime().exec("free -m");
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                if (line.startsWith("-/+ buffers/cache:")) {
-                                    String temp = line.split(":")[1].trim();
-                                    String[] split = temp.split(" ");
-                                    free = split[0] + " MB";
-                                    total = split[split.length - 1] + " MB";
+                            break;
+                        case LINUX:
+                            try {
+                                try {
+                                    Process pr = Runtime.getRuntime().exec("free -m");
+                                    BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        if (line.startsWith("-/+ buffers/cache:")) {
+                                            String temp = line.split(":")[1].trim();
+                                            String[] split = temp.split(" ");
+                                            free = split[0] + " MB";
+                                            total = split[split.length - 1] + " MB";
+                                        }
+                                    }
+                                    reader.close();
+                                } catch (IOException ex) {
+                                    Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
                                 }
+                            } catch (Exception ex) {
+                                Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                            reader.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    break;
-                case MAC:
-                    try {
-                        try {
-                            Process pr = Runtime.getRuntime().exec("top -l 1 | grep PhysMem: | awk '{print $10}' | sed 's/M//g'");
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                free = line + " MB";
+                            break;
+                        case MAC:
+                            try {
+                                try {
+                                    Process pr = Runtime.getRuntime().exec("top -n 1 -b");
+                                    BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        total = line + " MB";
+                                    }
+                                    reader.close();
+                                } catch (IOException ex) {
+                                    Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            } catch (Exception ex) {
+                                Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                            reader.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    try {
-                        try {
-                            Process pr = Runtime.getRuntime().exec("sysctl hw.memsize | awk '{print $NF}' | tr '\\n' 'Z' | sed 's/Z/ \\/ 1024 \\/ 1024/' | bc");
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                total = line + " MB";
-                            }
-                            reader.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    break;
-                default:
+                            break;
+                        default:
 
-            }
-            freeRamTextField.setText(free);
-            totalRamTextField.setText(total);
+                    }
+                    freeRamTextField.setText(free);
+                    totalRamTextField.setText(total);
+                }
+            }.start();
 
-            mcVersionTextField.setText("Incomplete");
+            //Since MC does not use an accessible variable, we have to "hackily" get the information
+            new Thread() {
+                @Override
+                public void run() {
+                    String mcversion = "Loading";
+                    /*try {
+                     URL[] urls = new URL[]{
+                     new File(OS.getFolderFile(), "bin" + File.separator + "minecraft.jar").toURI().toURL()
+                     };
+                     ClassLoader loader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
+                     Class cl = Class.forName("le", true, loader);
+                     System.out.println("---");
+                     Constructor cn = null;
+                     for (Constructor con : cl.getDeclaredConstructors()) {
+                     for (Class cla : con.getParameterTypes()) {
+                     System.out.print(cla.getName() + " ");
+                     }
+                     cn = con;
+                     System.out.println("---");
+                     }
+                     Object in = cn.newInstance("debug_mc_launcher", null);
+                     Method md = cl.getDeclaredMethod("g");
+                     md.setAccessible(true);
+                     try {
+                     md.invoke(in);
+                     } catch (InvocationTargetException e) {
+                     //we expected this to be thrown since the method will return an NPE like this
+                     }
+                     Field fl = cl.getDeclaredField("a");
+                     fl.setAccessible(true);
+                     Map map = (Map) fl.get(in);
+                     mcversion = (String) map.get("version");
+                     } catch (Exception e) {
+                     e.printStackTrace(System.out);
+                     mcversion = "Unknown";
+                     }*/
+                    mcversion = "Unknown";
+
+                    mcVersionTextField.setText(mcversion);
+                }
+            }.start();
 
             //load lwjgl jars here and check version
-            String version = "Unknown";
-            try {
-                String s = OS.getFolder() + "bin" + File.separator + "natives";
-                // This is a hack method to load the lwjgl
-                dynamicLoad(s);
-                URL[] urls = new URL[]{
-                    new File(OS.getFolderFile(), "bin" + File.separator + "lwjgl.jar").toURI().toURL()
-                };
-                ClassLoader loader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
-                Class<?> cl = Class.forName("org.lwjgl.Sys", true, loader);
-                version = (String) cl.asSubclass(org.lwjgl.Sys.class).getMethod("getVersion").invoke(null);
-            } catch (Throwable ex) {
-                Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            new Thread() {
+                @Override
+                public void run() {
+                    String version = "Unknown";
+                    try {
+                        String s = OS.getFolder() + "bin" + File.separator + "natives";
+                        // This is a hack method to load the lwjgl
+                        dynamicLoad(s);
+                        URL[] urls = new URL[]{
+                            new File(OS.getFolderFile(), "bin" + File.separator + "lwjgl.jar").toURI().toURL()
+                        };
+                        ClassLoader loader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader());
+                        Class<?> cl = Class.forName("org.lwjgl.Sys", true, loader);
+                        version = (String) cl.asSubclass(org.lwjgl.Sys.class).getMethod("getVersion").invoke(null);
+                    } catch (Throwable ex) {
+                        Logger.getLogger(SystemInformationPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
-            lwjglTextField.setText(version);
+                    lwjglTextField.setText(version);
+                }
+            }.start();
 
             //read minecraft.jar and look for meta-inf
-            JarFile file;
-            try {
-                file = new JarFile(new File(new File(OS.getFolderFile(), "bin"), "minecraft.jar"));
-                Manifest mf = file.getManifest();
-                if (mf != null) {
-                    moddedTextField.setText("Unlikely");
-                } else {
-                    moddedTextField.setText("Likely");
+            new Thread() {
+                @Override
+                public void run() {
+                    JarFile file;
+                    try {
+                        file = new JarFile(new File(new File(OS.getFolderFile(), "bin"), "minecraft.jar"));
+                        Manifest mf = file.getManifest();
+                        if (mf != null) {
+                            moddedTextField.setText("Unlikely");
+                        } else {
+                            moddedTextField.setText("Likely");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace(System.out);
+                        moddedTextField.setText("No jar found");
+                    }
                 }
-            } catch (IOException e) {
-                e.printStackTrace(System.out);
-                moddedTextField.setText("No jar found");
-            }
+            }.start();
         }
     }
 
     // This enables the java.library.path to be modified at runtime
     // From a Sun engineer at http://forums.sun.com/thread.jspa?threadID=707176
-    private void dynamicLoad(String s) throws IOException {
+    private synchronized void dynamicLoad(String s) throws IOException {
         try {
-            Field field = ClassLoader.class
-                    .getDeclaredField("usr_paths");
-            field.setAccessible(
-                    true);
+            Field field = ClassLoader.class.getDeclaredField("usr_paths");
+            field.setAccessible(true);
             String[] paths = (String[]) field.get(null);
-            for (int i = 0;
-                    i < paths.length;
-                    i++) {
+            for (int i = 0; i < paths.length; i++) {
                 if (s.equals(paths[i])) {
                     return;
                 }
             }
             String[] tmp = new String[paths.length + 1];
 
-            System.arraycopy(paths,
-                    0, tmp, 0, paths.length);
+            System.arraycopy(paths, 0, tmp, 0, paths.length);
             tmp[paths.length] = s;
 
-            field.set(
-                    null, tmp);
-            System.setProperty(
-                    "java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
+            field.set(null, tmp);
+            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
         } catch (IllegalAccessException e) {
             throw new IOException("Failed to get permissions to set library path");
         } catch (NoSuchFieldException e) {

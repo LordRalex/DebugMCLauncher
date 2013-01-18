@@ -4,15 +4,32 @@
  */
 package com.lordralex.debugmclauncher.panels;
 
-import javax.swing.JButton;
+import com.lordralex.debugmclauncher.LauncherMain;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
+import javax.net.ssl.HttpsURLConnection;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 
 /**
  *
  * @author Joshua
  */
 public class LoginPanel extends JPanel {
+
+    private String userName;
+    private String latestVersion;
+    private String downloadTicket;
+    private String sessionId;
 
     /**
      * Creates new form LoginPanel
@@ -99,7 +116,13 @@ public class LoginPanel extends JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginButtonMouseClicked
-        //TODO: add code to log in to Minecraft and start the game
+        loginButton.setText("Logging in");
+        loginButton.update(loginButton.getGraphics());
+        boolean loggedin = login();
+        if (loggedin) {
+            LauncherMain.getInstance().launchMinecraft(new String[]{userName, latestVersion, downloadTicket, sessionId});
+        }
+
     }//GEN-LAST:event_loginButtonMouseClicked
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JRadioButton forceUpdateButton;
@@ -125,5 +148,93 @@ public class LoginPanel extends JPanel {
             result += chars[i];
         }
         return result;
+    }
+
+    public boolean login() {
+        try {
+            String url = "https://login.minecraft.net/";
+            String details = "user=" + URLEncoder.encode(getUserName(), "UTF-8") + "&password=" + URLEncoder.encode(getPassword(), "UTF-8") + "&version=" + URLEncoder.encode("13", "UTF-8");
+            HttpsURLConnection localHttpsURLConnection = null;
+            try {
+                URL localURL = new URL(url);
+                localHttpsURLConnection = (HttpsURLConnection) localURL.openConnection();
+                localHttpsURLConnection.setRequestMethod("POST");
+                localHttpsURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+                localHttpsURLConnection.setRequestProperty("Content-Length", "" + Integer.toString(details.getBytes().length));
+                localHttpsURLConnection.setRequestProperty("Content-Language", "en-US");
+
+                localHttpsURLConnection.setUseCaches(false);
+                localHttpsURLConnection.setDoInput(true);
+                localHttpsURLConnection.setDoOutput(true);
+
+                localHttpsURLConnection.connect();
+                Certificate[] arrayOfCertificate = localHttpsURLConnection.getServerCertificates();
+
+                byte[] arrayOfByte1 = new byte[294];
+                DataInputStream localDataInputStream = new DataInputStream(LoginPanel.class.getResourceAsStream("/minecraft.key"));
+                localDataInputStream.readFully(arrayOfByte1);
+                localDataInputStream.close();
+
+                Certificate localCertificate = arrayOfCertificate[0];
+                PublicKey localPublicKey = localCertificate.getPublicKey();
+                byte[] arrayOfByte2 = localPublicKey.getEncoded();
+
+                for (int i = 0; i < arrayOfByte2.length; i++) {
+                    if (arrayOfByte2[i] != arrayOfByte1[i]) {
+                        throw new InvalidKeyException("Public key mismatch");
+                    }
+                }
+
+                DataOutputStream localDataOutputStream = new DataOutputStream(localHttpsURLConnection.getOutputStream());
+                localDataOutputStream.writeBytes(details);
+                localDataOutputStream.flush();
+                localDataOutputStream.close();
+
+                InputStream localInputStream = localHttpsURLConnection.getInputStream();
+                BufferedReader localBufferedReader = new BufferedReader(new InputStreamReader(localInputStream));
+
+                StringBuilder localStringBuffer = new StringBuilder();
+                String str1;
+                while ((str1 = localBufferedReader.readLine()) != null) {
+                    localStringBuffer.append(str1);
+                    localStringBuffer.append('\r');
+                }
+                localBufferedReader.close();
+
+                String result = localStringBuffer.toString().trim();
+                if (result.equalsIgnoreCase("Bad login")) {
+                    JOptionPane.showMessageDialog(null, "The login information is not correct", "An error has occured", JOptionPane.ERROR_MESSAGE);
+                } else if (result.equalsIgnoreCase("Old version")) {
+                    JOptionPane.showMessageDialog(null, "You have an old version of the launcher", "An error has occured", JOptionPane.ERROR_MESSAGE);
+                } else if (result.equalsIgnoreCase("User not premium")) {
+                    JOptionPane.showMessageDialog(null, "That account is not premium", "An error has occured", JOptionPane.ERROR_MESSAGE);
+                } else if (result.contains(":")) {
+                    String[] parts = result.split(":");
+                    userName = parts[2].trim();
+                    latestVersion = parts[0].trim();
+                    downloadTicket = parts[1].trim();
+                    sessionId = parts[3].trim();
+                    return true;
+                } else if (result.startsWith("Account migrated")) {
+                    JOptionPane.showMessageDialog(null, "That account has been migrated. Use your e-mail for the username", "An error has occured", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    throw new Exception("Something went wrong: reply was \"" + result + "\"");
+                }
+
+            } catch (Exception localException) {
+                localException.printStackTrace(System.out);
+                JOptionPane.showMessageDialog(null, localException, "An error has occured", JOptionPane.ERROR_MESSAGE);
+            } finally {
+                if (localHttpsURLConnection != null) {
+                    localHttpsURLConnection.disconnect();
+                }
+            }
+        } catch (UnsupportedEncodingException ex) {
+            JOptionPane.showMessageDialog(null, "UTF-8 is not a supported encoding. This is a major issue", "An error has occured", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, ex, "An error has occured", JOptionPane.ERROR_MESSAGE);
+        }
+        return false;
     }
 }
