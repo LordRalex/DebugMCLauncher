@@ -22,10 +22,6 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
-/**
- *
- * @author Joshua
- */
 public class LauncherMain extends JFrame {
 
     private static LauncherMain instance;

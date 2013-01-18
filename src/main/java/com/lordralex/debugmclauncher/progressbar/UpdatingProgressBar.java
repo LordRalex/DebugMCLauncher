@@ -1,15 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.lordralex.debugmclauncher.progressbar;
 
 import javax.swing.JProgressBar;
 
-/**
- *
- * @author Joshua
- */
 public class UpdatingProgressBar extends JProgressBar {
 
     @Override
