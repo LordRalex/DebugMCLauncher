@@ -7,6 +7,7 @@ import com.lordralex.debugmclauncher.panels.SystemInformationPanel;
 import com.lordralex.debugmclauncher.utils.OS;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -107,14 +108,14 @@ public class LauncherMain extends JFrame {
      */
     public static void main(String args[]) {
         try {
-            Logger.getLogger("com.lordralex.debugmclauncher").addHandler(new java.util.logging.FileHandler("logs.txt", true));
+            Logger.getLogger("com.lordralex.debugmclauncher").addHandler(new FileHandler("logs.txt", true));
         } catch (IOException ex) {
             Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SecurityException ex) {
             Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        java.awt.EventQueue.invokeLater(new Runnable() {
+        EventQueue.invokeLater(new Runnable() {
             public void run() {
                 instance = new LauncherMain();
                 instance.setVisible(true);
