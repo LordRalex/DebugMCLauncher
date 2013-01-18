@@ -8,8 +8,11 @@ import com.lordralex.debugmclauncher.utils.OS;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -155,13 +158,41 @@ public class LauncherMain extends JFrame {
         ProcessBuilder builder = new ProcessBuilder().command(command).inheritIO();
         try {
             Process process = builder.start();
+            InputStream error = process.getErrorStream();
+            InputStream input = process.getInputStream();
+            BufferedReader errorReader = new BufferedReader(new InputStreamReader(error));
+            BufferedReader inputReader = new BufferedReader(new InputStreamReader(input));
+            EchoThread errorThread = new EchoThread(errorReader);
+            EchoThread inputThread = new EchoThread(inputReader);
+            errorThread.start();
+            inputThread.start();
             process.waitFor();
         } catch (InterruptedException ex) {
             Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
         }
-
         System.exit(0);
+    }
+
+    private class EchoThread extends Thread {
+
+        BufferedReader input;
+
+        public EchoThread(BufferedReader reader) {
+            input = reader;
+        }
+
+        @Override
+        public void run() {
+            try {
+                String line;
+                while ((line = input.readLine()) != null) {
+                    System.out.println(line);
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace(System.out);
+            }
+        }
     }
 }
