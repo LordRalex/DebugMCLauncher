@@ -134,6 +134,11 @@ public class LauncherMain extends JFrame {
 
     public void launchMinecraft(String[] args) {
         this.setVisible(false);
+        
+        if(loginPanel1.forceUpdate()){
+            //run update code here
+            //clear bin first, then download new files
+        }
 
         ArrayList<String> command = new ArrayList<String>();
         command.add("java");
