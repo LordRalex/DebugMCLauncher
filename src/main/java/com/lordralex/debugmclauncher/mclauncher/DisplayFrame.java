@@ -34,4 +34,20 @@ public class DisplayFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private com.lordralex.debugmclauncher.mclauncher.DisplayPanel displayPanel1;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void setVisible(boolean state) {
+        super.setVisible(state);
+        displayPanel1.setVisible(state);
+        update();
+    }
+    
+    public void downloadFiles() {
+        displayPanel1.downloadFiles();
+    }
+    
+    public void update() {
+        this.update(this.getGraphics());
+        displayPanel1.update();
+    }
 }
