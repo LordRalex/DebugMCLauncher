@@ -1,5 +1,6 @@
 package com.lordralex.debugmclauncher;
 
+import com.lordralex.debugmclauncher.mclauncher.DisplayFrame;
 import com.lordralex.debugmclauncher.panels.IconPanel;
 import com.lordralex.debugmclauncher.panels.InformationPanel;
 import com.lordralex.debugmclauncher.panels.LoginPanel;
@@ -134,10 +135,12 @@ public class LauncherMain extends JFrame {
 
     public void launchMinecraft(String[] args) {
         this.setVisible(false);
-        
-        if(loginPanel1.forceUpdate()){
-            //run update code here
-            //clear bin first, then download new files
+
+        if (loginPanel1.forceUpdate()) {
+            DisplayFrame displayFrame = new DisplayFrame();
+            displayFrame.setVisible(true);
+            displayFrame.downloadFiles();
+            displayFrame.setVisible(false);
         }
 
         ArrayList<String> command = new ArrayList<String>();
@@ -150,7 +153,7 @@ public class LauncherMain extends JFrame {
                 + "%BIN%\\lwjgl_util.jar" + File.pathSeparatorChar
                 + "%BIN%\\jinput.jar\"");
         command.add("-Djava.library.path=\"%BIN%\\natives\"");
-        command.add("net.minecraft.client.Minecraft");
+        command.add("net.minecraft.client.MinecraftApplet");
         command.add(args[0]);
         command.add(args[3]);
 
