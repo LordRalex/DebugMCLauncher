@@ -153,7 +153,7 @@ public class LauncherMain extends JFrame {
                 + "%BIN%\\lwjgl_util.jar" + File.pathSeparatorChar
                 + "%BIN%\\jinput.jar\"");
         command.add("-Djava.library.path=\"%BIN%\\natives\"");
-        command.add("net.minecraft.client.MinecraftApplet");
+        command.add("net.minecraft.client.Minecraft");
         command.add(args[0]);
         command.add(args[3]);
 
