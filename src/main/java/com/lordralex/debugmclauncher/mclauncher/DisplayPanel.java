@@ -3,10 +3,8 @@ package com.lordralex.debugmclauncher.mclauncher;
 import com.lordralex.debugmclauncher.progressbar.UpdatingProgressBar;
 import com.lordralex.debugmclauncher.textfields.UpdatingTextField;
 import com.lordralex.debugmclauncher.utils.OS;
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,20 +16,13 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import lzma.sdk.lzma.Decoder;
-import lzma.sdk.lzma.Encoder;
-import lzma.streams.LzmaInputStream;
-import lzma.streams.LzmaOutputStream;
 
 public class DisplayPanel extends JPanel {
 
@@ -85,6 +76,10 @@ public class DisplayPanel extends JPanel {
     private UpdatingProgressBar totalProgressBar;
     // End of variables declaration//GEN-END:variables
 
+    public void update() {
+        this.update(this.getGraphics());
+    }
+
     public void downloadFiles() {
         recursiveDelete(new File(OS.getFolderFile(), "bin"));
         File downloadDir = new File(OS.getFolderFile(), "bin");
@@ -98,13 +93,13 @@ public class DisplayPanel extends JPanel {
         files.add(new DownloadFile("http://s3.amazonaws.com/MinecraftDownload/jinput.jar", "jinput.jar", downloadDir));
         switch (OS.getOS()) {
             case WINDOWS:
-                files.add(new DownloadFile("http://s3.amazonaws.com/MinecraftDownload/windows_natives.jar.lzma", "windows_natives.jar.lzma", nativesDir));
+                files.add(new DownloadFile("http://s3.amazonaws.com/MinecraftDownload/windows_natives.jar", "windows_natives.jar", nativesDir, true));
                 break;
             case LINUX:
-                files.add(new DownloadFile("http://s3.amazonaws.com/MinecraftDownload/linux_natives.jar.lzma", "linux_natives.jar.lzma", nativesDir));
+                files.add(new DownloadFile("http://s3.amazonaws.com/MinecraftDownload/linux_natives.jar", "linux_natives.jar", nativesDir, true));
                 break;
             case MAC:
-                files.add(new DownloadFile("http://s3.amazonaws.com/MinecraftDownload/macos_natives.jar.lzma", "macos_natives.jar.lzma", nativesDir));
+                files.add(new DownloadFile("http://s3.amazonaws.com/MinecraftDownload/macos_natives.jar", "macos_natives.jar", nativesDir, true));
                 break;
             default:
                 break;
@@ -114,11 +109,8 @@ public class DisplayPanel extends JPanel {
             try {
                 progressTextField.setText("Downloading " + df.fileName);
                 download(df);
-                if (df.fileName.endsWith("lzma")) {
-                    progressTextField.setText("Extracting " + df.fileName);
-                    extract(df);
-                    progressTextField.setText("Extracting " + df.fileName.replace(".lzma", ""));
-                    extract(df.fileName.replace(".lzma", ""), df.path, Type.JAR);
+                if (df.extract) {
+                    extract(df.fileName, df.path);
                 }
             } catch (IOException ex) {
                 ex.printStackTrace(System.out);
@@ -133,11 +125,7 @@ public class DisplayPanel extends JPanel {
     }
 
     private void extract(DownloadFile file) throws IOException {
-        extract(file.fileName, file.path, Type.LZMA);
-    }
-
-    public void update() {
-        this.update(this.getGraphics());
+        extract(file.fileName, file.path);
     }
 
     private void recursiveDelete(File file) {
@@ -156,52 +144,42 @@ public class DisplayPanel extends JPanel {
         file.delete();
     }
 
-    public void download(String path, String fileName) {
+    private void download(String path, String fileName) throws IOException {
         System.out.println("Downloading " + path + " to " + fileName);
-        try {
-            URL test = new URL(path);
-            HttpURLConnection httpcon = (HttpURLConnection) test.openConnection();
-            httpcon.addRequestProperty("User-Agent", "Mozilla/5.0");
-            ReadableByteChannel rbc = Channels.newChannel(httpcon.getInputStream());
-            FileOutputStream fos = new FileOutputStream(fileName);
-            fos.getChannel().transferFrom(rbc, 0, 1 << 24);
-        } catch (IOException ex) {
-            ex.printStackTrace(System.out);
-        }
+        URL test = new URL(path);
+        HttpURLConnection httpcon = (HttpURLConnection) test.openConnection();
+        httpcon.addRequestProperty("User-Agent", "Mozilla/5.0");
+        ReadableByteChannel rbc = Channels.newChannel(httpcon.getInputStream());
+        FileOutputStream fos = new FileOutputStream(fileName);
+        fos.getChannel().transferFrom(rbc, 0, 1 << 24);
+        fos.close();
+        rbc.close();
+        httpcon.disconnect();
     }
 
-    public void extract(String fileName, File pathToFolder, Type type) throws IOException {
+    private void extract(String fileName, File pathToFolder) throws IOException {
         System.out.println("Extracting " + fileName + " to " + pathToFolder);
-        switch (type) {
-            case JAR:
-                Enumeration entries;
-                ZipFile zipFile;
-                zipFile = new ZipFile(new File(pathToFolder, fileName));
-                entries = zipFile.entries();
-                while (entries.hasMoreElements()) {
-                    ZipEntry entry = (ZipEntry) entries.nextElement();
-                    if (entry.isDirectory()) {
-                        (new File(pathToFolder, entry.getName())).mkdir();
-                        continue;
-                    }
-                    copyInputStream(zipFile.getInputStream(entry),
-                            new BufferedOutputStream(new FileOutputStream(new File(pathToFolder, entry.getName()))));
-                }
-                zipFile.close();
-                new File(pathToFolder, fileName).delete();
-                break;
-            case LZMA:
-                LzmaInputStream input = new LzmaInputStream(new BufferedInputStream(new FileInputStream(new File(pathToFolder, fileName))), new Decoder());
-                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(pathToFolder));
-                copyInputStream(input, output);
-                new File(pathToFolder, fileName).delete();
-                break;
+        Enumeration entries;
+        ZipFile zipFile;
+        zipFile = new ZipFile(new File(pathToFolder, fileName));
+        entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = (ZipEntry) entries.nextElement();
+            if (entry.getName().startsWith("META-INF")
+                    || entry.getName().startsWith("MOJANG")
+                    || entry.getName().startsWith("MANIFEST")) {
+                continue;
+            }
+            copyInputStream(zipFile.getInputStream(entry),
+                    new BufferedOutputStream(new FileOutputStream(new File(pathToFolder, entry.getName()))));
         }
+        zipFile.close();
+        new File(pathToFolder, fileName).delete();
     }
 
     private void copyInputStream(InputStream in, OutputStream out) {
         try {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[16384];
             int len;
             while ((len = in.read(buffer)) >= 0) {
                 out.write(buffer, 0, len);
@@ -215,20 +193,20 @@ public class DisplayPanel extends JPanel {
 
     private class DownloadFile {
 
-        public String url;
-        public String fileName;
-        public File path;
+        final public String url;
+        final public String fileName;
+        final public File path;
+        final public boolean extract;
 
         public DownloadFile(String u, String f, File p) {
+            this(u, f, p, false);
+        }
+
+        public DownloadFile(String u, String f, File p, boolean e) {
             url = u;
             fileName = f;
             path = p;
+            extract = e;
         }
-    }
-
-    private enum Type {
-
-        LZMA,
-        JAR;
     }
 }

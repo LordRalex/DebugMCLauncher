@@ -134,6 +134,22 @@ public class LoginPanel extends JPanel {
         return result;
     }
 
+    public void setUsername(String name) {
+        usernameTextBox.setText(name);
+    }
+
+    public void setPassword(String pass) {
+        passwordTextBox.setText(pass);
+    }
+
+    public void setForceUpdate(String newStatus) {
+        setForceUpdate(Boolean.parseBoolean(newStatus));
+    }
+
+    public void setForceUpdate(boolean newStatus) {
+        forceUpdateButton.setSelected(newStatus);
+    }
+
     public boolean login() {
         try {
             String url = "https://login.minecraft.net/";

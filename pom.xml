@@ -14,8 +14,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.5</source>
+                    <target>1.5</target>
                     <archive>
                         <manifest>
                             <mainClass>com.lordralex.debugmclauncher.LauncherMain</mainClass>
@@ -64,11 +64,12 @@
             <groupId>org.lwjgl.lwjgl</groupId>
             <artifactId>lwjgl</artifactId>
             <version>2.8.5</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.jponge</groupId>
-            <artifactId>lzma-java</artifactId>
-            <version>1.2</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jutils</artifactId>
+                    <groupId>net.java.jutils</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     <properties>

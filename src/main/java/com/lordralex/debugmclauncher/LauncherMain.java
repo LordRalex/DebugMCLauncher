@@ -95,7 +95,7 @@ public class LauncherMain extends JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    public static void main(String args[]) {
+    public static void main(final String args[]) {
         try {
             Logger.getLogger("com.lordralex.debugmclauncher").addHandler(new FileHandler("logs.txt", true));
         } catch (IOException ex) {
@@ -108,6 +108,15 @@ public class LauncherMain extends JFrame {
             public void run() {
                 instance = new LauncherMain();
                 instance.setVisible(true);
+                if (args.length >= 1) {
+                    instance.loginPanel1.setUsername(args[0]);
+                    if (args.length >= 2) {
+                        instance.loginPanel1.setPassword(args[1]);
+                        if (args.length >= 3) {
+                            instance.loginPanel1.setForceUpdate(args[2]);
+                        }
+                    }
+                }
                 instance.informationPanel1.getNewsFeed();
                 instance.systemInformationPanel1.getSystemInfo();
                 instance.update(instance.getGraphics());
