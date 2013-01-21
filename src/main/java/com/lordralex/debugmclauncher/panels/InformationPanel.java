@@ -4,6 +4,8 @@ import java.net.URL;
 import javax.swing.JPanel;
 
 public final class InformationPanel extends JPanel {
+    
+    private static final String URL_LINK = "http://mcupdate.tumblr.com/";
 
     public InformationPanel() {
         initComponents();
@@ -57,7 +59,7 @@ public final class InformationPanel extends JPanel {
         @Override
         public void run() {
             try {
-                jTextPane2.setPage(new URL("http://mcupdate.tumblr.com/"));
+                jTextPane2.setPage(new URL(URL_LINK));
             } catch (Exception e) {
                 e.printStackTrace(System.out);
                 jTextPane2.setText("Unable to get the news feed");
