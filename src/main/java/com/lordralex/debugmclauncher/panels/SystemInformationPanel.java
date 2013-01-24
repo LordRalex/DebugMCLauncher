@@ -380,6 +380,7 @@ public class SystemInformationPanel extends JPanel {
     // From a Sun engineer at http://forums.sun.com/thread.jspa?threadID=707176
     private synchronized void dynamicLoad(String s) throws IOException {
         try {
+            System.out.println("Old library path: " + System.getProperty("java.library.path"));
             Field field = ClassLoader.class.getDeclaredField("usr_paths");
             field.setAccessible(true);
             String[] paths = (String[]) field.get(null);
@@ -394,7 +395,8 @@ public class SystemInformationPanel extends JPanel {
             tmp[paths.length] = s;
 
             field.set(null, tmp);
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + s);
+            System.setProperty("java.library.path", System.getProperty("java.library.path").substring(0, System.getProperty("java.library.path").length() - 3) + File.pathSeparator + s + File.pathSeparator + File.pathSeparator + ".");
+            System.out.println("Set new library path to: " + System.getProperty("java.library.path"));
         } catch (IllegalAccessException e) {
             throw new IOException("Failed to get permissions to set library path");
         } catch (NoSuchFieldException e) {
