@@ -15,13 +15,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JFrame;
+import javax.swing.JTabbedPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
@@ -41,7 +41,7 @@ public class LauncherMain extends JFrame {
         loginPanel1 = new LoginPanel();
         systemInformationPanel1 = new SystemInformationPanel();
         iconPanel1 = new IconPanel();
-        informationPanel1 = new InformationPanel();
+        webPagesTabPanel = new JTabbedPane();
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBackground(new Color(255, 255, 255));
@@ -57,26 +57,26 @@ public class LauncherMain extends JFrame {
         iconPanel1.setLayout(iconPanel1Layout);
         iconPanel1Layout.setHorizontalGroup(
             iconPanel1Layout.createParallelGroup(Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 662, Short.MAX_VALUE)
         );
         iconPanel1Layout.setVerticalGroup(
             iconPanel1Layout.createParallelGroup(Alignment.LEADING)
             .addGap(0, 0, Short.MAX_VALUE)
         );
 
-        informationPanel1.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
-        informationPanel1.setPreferredSize(new Dimension(469, 304));
+        webPagesTabPanel.setToolTipText("");
+        webPagesTabPanel.setRequestFocusEnabled(false);
 
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(Alignment.TRAILING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(iconPanel1, GroupLayout.DEFAULT_SIZE, 644, Short.MAX_VALUE)
+                .addComponent(iconPanel1, GroupLayout.DEFAULT_SIZE, 666, Short.MAX_VALUE)
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(loginPanel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
             .addGroup(layout.createSequentialGroup()
-                .addComponent(informationPanel1, GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
+                .addComponent(webPagesTabPanel)
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(systemInformationPanel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
         );
@@ -84,8 +84,8 @@ public class LauncherMain extends JFrame {
             layout.createParallelGroup(Alignment.LEADING)
             .addGroup(Alignment.TRAILING, layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(Alignment.LEADING)
-                    .addComponent(informationPanel1, GroupLayout.DEFAULT_SIZE, 309, Short.MAX_VALUE)
-                    .addComponent(systemInformationPanel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(systemInformationPanel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(webPagesTabPanel))
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(Alignment.LEADING, false)
                     .addComponent(iconPanel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -96,14 +96,6 @@ public class LauncherMain extends JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     public static void main(final String args[]) {
-        try {
-            Logger.getLogger("com.lordralex.debugmclauncher").addHandler(new FileHandler("logs.txt", true));
-        } catch (IOException ex) {
-            Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SecurityException ex) {
-            Logger.getLogger(LauncherMain.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 instance = new LauncherMain();
@@ -117,7 +109,12 @@ public class LauncherMain extends JFrame {
                         }
                     }
                 }
-                instance.informationPanel1.getNewsFeed();
+                InformationPanel mcupdate = new InformationPanel();
+                instance.webPagesTabPanel.addTab("Minecraft Tumblr", mcupdate);
+                mcupdate.getNewsFeed("http://mcupdate.tumblr.com/");
+                InformationPanel supportguru = new InformationPanel();
+                instance.webPagesTabPanel.addTab("Support Guru", supportguru);
+                supportguru.getNewsFeed("http://supportgurus.org/");
                 instance.systemInformationPanel1.getSystemInfo();
                 instance.update(instance.getGraphics());
             }
@@ -125,9 +122,9 @@ public class LauncherMain extends JFrame {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private IconPanel iconPanel1;
-    private InformationPanel informationPanel1;
     private LoginPanel loginPanel1;
     private SystemInformationPanel systemInformationPanel1;
+    private JTabbedPane webPagesTabPanel;
     // End of variables declaration//GEN-END:variables
 
     public static LauncherMain getInstance() {
@@ -140,6 +137,10 @@ public class LauncherMain extends JFrame {
 
     public LoginPanel getLoginPanel() {
         return loginPanel1;
+    }
+
+    public synchronized void updateTabbedPanel() {
+        webPagesTabPanel.update(webPagesTabPanel.getGraphics());
     }
 
     public void launchMinecraft(String[] args) {

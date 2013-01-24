@@ -1,11 +1,10 @@
 package com.lordralex.debugmclauncher.panels;
 
+import com.lordralex.debugmclauncher.LauncherMain;
 import java.net.URL;
 import javax.swing.JPanel;
 
 public final class InformationPanel extends JPanel {
-    
-    private static final String URL_LINK = "http://mcupdate.tumblr.com/";
 
     public InformationPanel() {
         initComponents();
@@ -42,29 +41,33 @@ public final class InformationPanel extends JPanel {
     private javax.swing.JTextPane jTextPane2;
     // End of variables declaration//GEN-END:variables
 
-    public void getNewsFeed() {
+    public void getNewsFeed(String pageLink) {
         jTextPane2.setContentType("text/html");
         jTextPane2.setText("Loading news feed");
         jTextPane2.update(jTextPane2.getGraphics());
-        FeedThread feed = new FeedThread();
+        FeedThread feed = new FeedThread(pageLink);
         feed.start();
     }
 
     private class FeedThread extends Thread {
 
-        public FeedThread() {
-            super("FEED_THREAD");
+        final String page;
+
+        public FeedThread(String pageLink) {
+            page = pageLink;
         }
 
         @Override
         public void run() {
             try {
-                jTextPane2.setPage(new URL(URL_LINK));
+                jTextPane2.setPage(new URL(page));
             } catch (Exception e) {
                 e.printStackTrace(System.out);
                 jTextPane2.setText("Unable to get the news feed");
             }
             jTextPane2.update(jTextPane2.getGraphics());
+            InformationPanel.this.update(InformationPanel.this.getGraphics());
+            LauncherMain.getInstance().updateTabbedPanel();
         }
     }
 }
