@@ -14,7 +14,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
@@ -96,9 +98,12 @@ public class LauncherMain extends JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     public static void main(final String args[]) {
+        System.out.println("Starting launcher");
         EventQueue.invokeLater(new Runnable() {
             public void run() {
+                System.out.println("Creating new instance");
                 instance = new LauncherMain();
+                System.out.println("Setting visible");
                 instance.setVisible(true);
                 if (args.length >= 1) {
                     instance.loginPanel1.setUsername(args[0]);
@@ -109,16 +114,48 @@ public class LauncherMain extends JFrame {
                         }
                     }
                 }
-                InformationPanel mcupdate = new InformationPanel();
-                instance.webPagesTabPanel.addTab("Minecraft Tumblr", mcupdate);
-                mcupdate.getNewsFeed("http://mcupdate.tumblr.com/");
-                InformationPanel supportguru = new InformationPanel();
-                instance.webPagesTabPanel.addTab("Support Guru", supportguru);
-                supportguru.getNewsFeed("http://supportgurus.org/");
+                System.out.println("Creating site pages");
+                try {
+                    URL pageList = new URL("https://raw.github.com/LordRalex/DebugMCLauncher/master/pages.txt");
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(pageList.openStream()));
+                    String line;
+                    List<String> list = new ArrayList<String>();
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println(line);
+                        System.out.println(line.substring(0, line.indexOf("|")).trim());
+                        System.out.println(line.substring(line.indexOf("|") + 1).trim());
+                        list.add(line);
+                    }
+                    reader.close();
+                    for (String page : list) {
+                        if (page == null || !page.contains("|")) {
+                            continue;
+                        }
+                        String tabName = page.substring(0, page.indexOf("|")).trim();
+                        String link = page.substring(page.indexOf("|") + 1).trim();
+                        InformationPanel panel = new InformationPanel();
+                        instance.webPagesTabPanel.addTab(tabName, panel);
+                        panel.getNewsFeed(link);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace(System.out);
+                    instance.webPagesTabPanel.removeAll();
+                    System.out.println("Loading MC tumblr");
+                    InformationPanel mcupdate = new InformationPanel();
+                    instance.webPagesTabPanel.addTab("Minecraft Tumblr", mcupdate);
+                    mcupdate.getNewsFeed("http://mcupdate.tumblr.com/");
+                    System.out.println("Loading SG page");
+                    InformationPanel supportguru = new InformationPanel();
+                    instance.webPagesTabPanel.addTab("Support Guru", supportguru);
+                    supportguru.getNewsFeed("http://supportgurus.org/");
+                }
+                System.out.println("Loading system information");
                 instance.systemInformationPanel1.getSystemInfo();
+                System.out.println("Refreshing main screen");
                 instance.update(instance.getGraphics());
             }
         });
+        System.out.println("Event invoked");
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private IconPanel iconPanel1;
